@@ -7,7 +7,7 @@
   "variable": [
     {
       "key": "baseUrl",
-      "value": "http://localhost:3000",
+      "value": "https://sotodoserver.onrender.com",
       "type": "string"
     },
     {
@@ -176,50 +176,6 @@
           "response": []
         },
         {
-          "name": "Summarize Text - Short",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"text\": \"Node.js, Google'ın V8 JavaScript motorunu kullanarak JavaScript kodunu sunucu tarafında çalıştırmaya olanak sağlayan bir çalışma zamanı ortamıdır. Ryan Dahl tarafından 2009 yılında geliştirilmiştir. Node.js'in en önemli özelliği, asenkron ve olay odaklı mimarisidir. Bu sayede binlerce eşzamanlı bağlantıyı tek bir iş parçacığında işleyebilir. NPM (Node Package Manager) ile geniş bir paket ekosistemi sunar. Web sunucuları, API'ler, gerçek zamanlı uygulamalar ve mikroservisler geliştirmek için yaygın olarak kullanılır.\",\n  \"summaryLength\": \"kısa\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/ai/summarize-text",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "ai", "summarize-text"]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Summarize Text - Long",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"text\": \"Express.js, Node.js için minimal ve esnek bir web uygulama çerçevesidir. TJ Holowaychuk tarafından geliştirilmiş ve şu anda OpenJS Foundation tarafından sürdürülmektedir. Express, web ve mobil uygulamalar için güçlü özellikler seti sağlar. Middleware sistemi sayesinde HTTP isteklerini işlemek için modüler bir yaklaşım sunar. Routing, template engine desteği, statik dosya sunumu, error handling gibi temel web geliştirme ihtiyaçlarını karşılar. RESTful API'ler geliştirmek için ideal bir platformdur. Minimal yapısı sayesinde geliştiricilere büyük esneklik sağlar ve ihtiyaçlarına göre özelleştirme imkanı verir. Connect middleware'leri ile uyumludur ve geniş bir ekosisteme sahiptir.\",\n  \"summaryLength\": \"uzun\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/ai/summarize-text",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "ai", "summarize-text"]
-            }
-          },
-          "response": []
-        },
-        {
           "name": "Analyze Image",
           "request": {
             "method": "POST",
@@ -235,34 +191,6 @@
                 {
                   "key": "userText",
                   "value": "Bu görseldeki metni oku ve önemli noktaları çıkar",
-                  "type": "text"
-                }
-              ]
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/ai/analyze-image",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "ai", "analyze-image"]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Analyze Image - Diagram Analysis",
-          "request": {
-            "method": "POST",
-            "header": [],
-            "body": {
-              "mode": "formdata",
-              "formdata": [
-                {
-                  "key": "image",
-                  "type": "file",
-                  "src": []
-                },
-                {
-                  "key": "userText",
-                  "value": "Bu diyagramı açıkla ve ana bileşenlerini listele",
                   "type": "text"
                 }
               ]
