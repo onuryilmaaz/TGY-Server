@@ -265,6 +265,24 @@ npm start
 - **DELETE** `/api/notes/:id`
 - **Açıklama:** Notu ve ilişkili resimleri siler
 
+#### Not Resmini Getir
+
+- **GET** `/api/notes/:id/image/:fileName`
+- **Açıklama:** Belirtilen nota ait resmi güvenli şekilde getirir
+- **Parametreler:**
+  - `id`: Not ID'si
+  - `fileName`: Resim dosya adı (örn: image_1760721803458.png)
+
+**Örnek:** `GET /api/notes/67123abc456def789/image/image_1760721803458.png`
+
+**Güvenlik Özellikleri:**
+
+- Not'un varlığı kontrol edilir
+- Resmin o nota ait olduğu doğrulanır
+- Dosyanın fiziksel varlığı kontrol edilir
+- Doğru Content-Type header'ı ayarlanır
+- Cache optimizasyonu (1 yıl)
+
 ## Özellikler
 
 ### 🔐 Authentication

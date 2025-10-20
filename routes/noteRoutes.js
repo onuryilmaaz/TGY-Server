@@ -6,6 +6,7 @@ const {
   createNote,
   updateNote,
   deleteNote,
+  getNoteImage,
 } = require("../controllers/noteController");
 // const { authenticateToken } = require("../middlewares/auth");
 
@@ -36,5 +37,10 @@ router.put("/:id", updateNote);
 // @route   DELETE /api/notes/:id
 // @access  Public (şimdilik)
 router.delete("/:id", deleteNote);
+
+// @desc    Not resmini getir
+// @route   GET /api/notes/:id/image/:fileName
+// @access  Public (şimdilik)
+router.get("/:id/image/:fileName", getNoteImage);
 
 module.exports = router;

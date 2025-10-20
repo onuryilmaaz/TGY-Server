@@ -51,6 +51,8 @@ app.get("/", (req, res) => {
         createNote: "POST /api/notes - Yeni not oluştur",
         updateNote: "PUT /api/notes/:id - Not güncelle",
         deleteNote: "DELETE /api/notes/:id - Not sil",
+        getNoteImage:
+          "GET /api/notes/:id/image/:fileName - Not resmini güvenli şekilde getir",
       },
     },
   });

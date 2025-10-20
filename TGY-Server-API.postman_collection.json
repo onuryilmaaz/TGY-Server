@@ -19,6 +19,11 @@
       "key": "noteId",
       "value": "",
       "type": "string"
+    },
+    {
+      "key": "fileName",
+      "value": "image_1760721803458.png",
+      "type": "string"
     }
   ],
   "item": [
@@ -459,6 +464,58 @@
               "raw": "{{baseUrl}}/api/notes/{{noteId}}",
               "host": ["{{baseUrl}}"],
               "path": ["api", "notes", "{{noteId}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Note Image",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/notes/{{noteId}}/image/{{fileName}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "notes", "{{noteId}}", "image", "{{fileName}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Note with Images",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const response = pm.response.json();",
+                  "    if (response.data && response.data._id) {",
+                  "        pm.collectionVariables.set('noteId', response.data._id);",
+                  "        console.log('Note ID saved:', response.data._id);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Resimli Not Örneği\",\n  \"content\": \"Bu not resim içeren bir örnektir. Aşağıdaki resimler nota eklenmiştir.\",\n  \"images\": [\n    {\n      \"fileName\": \"image_1760721803458.png\",\n      \"originalName\": \"diagram.png\",\n      \"filePath\": \"/uploads/images/image_1760721803458.png\",\n      \"fileSize\": 245760,\n      \"mimeType\": \"image/png\"\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/notes",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "notes"]
             }
           },
           "response": []

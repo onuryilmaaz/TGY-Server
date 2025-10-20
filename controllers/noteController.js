@@ -215,10 +215,86 @@ const deleteNote = async (req, res) => {
   }
 };
 
+// @desc    Not resmini getir
+// @route   GET /api/notes/:id/image/:fileName
+// @access  Private
+const getNoteImage = async (req, res) => {
+  try {
+    const { id, fileName } = req.params;
+
+    // Not'un varlığını ve kullanıcıya ait olduğunu kontrol et
+    const note = await Note.findOne({
+      _id: id,
+      userId: "temp-user-id",
+    });
+
+    if (!note) {
+      return res.status(404).json({
+        success: false,
+        message: "Not bulunamadı.",
+      });
+    }
+
+    // Resmin nota ait olduğunu kontrol et
+    const imageExists = note.images.some((img) => img.fileName === fileName);
+    if (!imageExists) {
+      return res.status(404).json({
+        success: false,
+        message: "Resim bu nota ait değil.",
+      });
+    }
+
+    // Dosya yolunu oluştur
+    const filePath = path.join(process.cwd(), "uploads", "images", fileName);
+
+    // Dosyanın varlığını kontrol et
+    if (!fs.existsSync(filePath)) {
+      return res.status(404).json({
+        success: false,
+        message: "Resim dosyası bulunamadı.",
+      });
+    }
+
+    // Dosya tipini belirle
+    const ext = path.extname(fileName).toLowerCase();
+    let contentType = "image/jpeg";
+
+    switch (ext) {
+      case ".png":
+        contentType = "image/png";
+        break;
+      case ".gif":
+        contentType = "image/gif";
+        break;
+      case ".webp":
+        contentType = "image/webp";
+        break;
+      case ".jpg":
+      case ".jpeg":
+      default:
+        contentType = "image/jpeg";
+        break;
+    }
+
+    // Resmi gönder
+    res.setHeader("Content-Type", contentType);
+    res.setHeader("Cache-Control", "public, max-age=31536000"); // 1 yıl cache
+    res.sendFile(filePath);
+  } catch (error) {
+    console.error("Resim getirme hatası:", error);
+    res.status(500).json({
+      success: false,
+      message: "Resim getirilirken bir hata oluştu.",
+      error: error.message,
+    });
+  }
+};
+
 module.exports = {
   getNotes,
   getNoteById,
   createNote,
   updateNote,
   deleteNote,
+  getNoteImage,
 };
