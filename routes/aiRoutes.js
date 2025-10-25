@@ -5,7 +5,9 @@ const {
   summarizeText,
   analyzeImage,
   uploadImage,
+  getAnalysisHistory,
 } = require("../controllers/aiController");
+const { authenticateToken } = require("../middlewares/auth");
 
 const storage = multer.memoryStorage();
 
@@ -36,9 +38,20 @@ const upload = multer({
   },
 });
 
-router.post("/summarize-text", summarizeText);
-router.post("/analyze-image", upload.single("image"), analyzeImage);
-router.post("/upload-image", upload.single("image"), uploadImage);
+router.post("/summarize-text", authenticateToken, summarizeText);
+router.post(
+  "/analyze-image",
+  authenticateToken,
+  upload.single("image"),
+  analyzeImage
+);
+router.post(
+  "/upload-image",
+  authenticateToken,
+  upload.single("image"),
+  uploadImage
+);
+router.get("/analysis-history", authenticateToken, getAnalysisHistory);
 router.use((error, req, res, next) => {
   if (error instanceof multer.MulterError) {
     if (error.code === "LIMIT_FILE_SIZE") {

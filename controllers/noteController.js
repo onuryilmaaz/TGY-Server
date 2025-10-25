@@ -1,4 +1,5 @@
 const Note = require("../models/Note");
+const Bookmark = require("../models/Bookmark");
 const fs = require("fs");
 const path = require("path");
 
@@ -11,17 +12,23 @@ const getNotes = async (req, res) => {
       page = 1,
       limit = 10,
       search,
+      tags,
       sortBy = "createdAt",
       sortOrder = "desc",
     } = req.query;
 
-    const filter = { userId: "temp-user-id" };
+    const filter = { userId: req.user._id };
 
     if (search) {
       filter.$or = [
         { title: { $regex: search, $options: "i" } },
         { content: { $regex: search, $options: "i" } },
       ];
+    }
+
+    if (tags) {
+      const tagArray = Array.isArray(tags) ? tags : tags.split(",");
+      filter.tags = { $in: tagArray };
     }
 
     const sort = {};
@@ -67,7 +74,7 @@ const getNoteById = async (req, res) => {
   try {
     const note = await Note.findOne({
       _id: req.params.id,
-      userId: "temp-user-id",
+      userId: req.user._id,
     }).select("-__v");
 
     if (!note) {
@@ -96,7 +103,7 @@ const getNoteById = async (req, res) => {
 // @access  Private
 const createNote = async (req, res) => {
   try {
-    const { title, content, images } = req.body;
+    const { title, content, images, tags = [], isPublic = false } = req.body;
 
     if (!title || !content) {
       return res.status(400).json({
@@ -105,11 +112,21 @@ const createNote = async (req, res) => {
       });
     }
 
+    // Tag validasyonu
+    if (tags && tags.length > 5) {
+      return res.status(400).json({
+        success: false,
+        message: "Maksimum 5 tag eklenebilir.",
+      });
+    }
+
     const note = new Note({
       title,
       content,
       images: images || [],
-      userId: "temp-user-id",
+      tags: tags || [],
+      isPublic: isPublic || false,
+      userId: req.user._id,
     });
 
     const savedNote = await note.save();
@@ -134,15 +151,26 @@ const createNote = async (req, res) => {
 // @access  Private
 const updateNote = async (req, res) => {
   try {
-    const { title, content, images } = req.body;
+    const { title, content, images, tags, isPublic } = req.body;
+
+    // Tag validasyonu
+    if (tags && tags.length > 5) {
+      return res.status(400).json({
+        success: false,
+        message: "Maksimum 5 tag eklenebilir.",
+      });
+    }
+
+    const updateData = {};
+    if (title !== undefined) updateData.title = title;
+    if (content !== undefined) updateData.content = content;
+    if (images !== undefined) updateData.images = images;
+    if (tags !== undefined) updateData.tags = tags;
+    if (isPublic !== undefined) updateData.isPublic = isPublic;
 
     const note = await Note.findOneAndUpdate(
-      { _id: req.params.id, userId: "temp-user-id" },
-      {
-        ...(title && { title }),
-        ...(content && { content }),
-        ...(images && { images }),
-      },
+      { _id: req.params.id, userId: req.user._id },
+      updateData,
       { new: true, runValidators: true }
     ).select("-__v");
 
@@ -175,7 +203,7 @@ const deleteNote = async (req, res) => {
   try {
     const note = await Note.findOne({
       _id: req.params.id,
-      userId: "temp-user-id",
+      userId: req.user._id,
     });
 
     if (!note) {
@@ -225,7 +253,7 @@ const getNoteImage = async (req, res) => {
     // Not'un varlığını ve kullanıcıya ait olduğunu kontrol et
     const note = await Note.findOne({
       _id: id,
-      userId: "temp-user-id",
+      userId: req.user._id,
     });
 
     if (!note) {
@@ -290,6 +318,257 @@ const getNoteImage = async (req, res) => {
   }
 };
 
+// @desc    Public notları listele
+// @route   GET /api/notes/public
+// @access  Public
+const getPublicNotes = async (req, res) => {
+  try {
+    const {
+      page = 1,
+      limit = 10,
+      search,
+      tags,
+      sortBy = "createdAt",
+      sortOrder = "desc",
+    } = req.query;
+
+    const filter = { isPublic: true };
+
+    if (search) {
+      filter.$or = [
+        { title: { $regex: search, $options: "i" } },
+        { content: { $regex: search, $options: "i" } },
+      ];
+    }
+
+    if (tags) {
+      const tagArray = Array.isArray(tags) ? tags : tags.split(",");
+      filter.tags = { $in: tagArray };
+    }
+
+    const sort = {};
+    sort[sortBy] = sortOrder === "desc" ? -1 : 1;
+
+    const skip = (page - 1) * limit;
+
+    const notes = await Note.find(filter)
+      .populate("userId", "firstName lastName")
+      .sort(sort)
+      .skip(skip)
+      .limit(parseInt(limit))
+      .select("-__v");
+
+    const total = await Note.countDocuments(filter);
+
+    res.status(200).json({
+      success: true,
+      data: {
+        notes,
+        pagination: {
+          currentPage: parseInt(page),
+          totalPages: Math.ceil(total / limit),
+          totalNotes: total,
+          hasNext: page * limit < total,
+          hasPrev: page > 1,
+        },
+      },
+    });
+  } catch (error) {
+    console.error("Public notları getirme hatası:", error);
+    res.status(500).json({
+      success: false,
+      message: "Public notlar getirilirken bir hata oluştu.",
+      error: error.message,
+    });
+  }
+};
+
+// @desc    Public notu bookmark olarak toggle et (ekle/çıkar)
+// @route   POST /api/notes/public/:id/bookmark
+// @access  Private
+const toggleBookmark = async (req, res) => {
+  try {
+    const note = await Note.findOne({
+      _id: req.params.id,
+      isPublic: true,
+    });
+
+    if (!note) {
+      return res.status(404).json({
+        success: false,
+        message: "Public not bulunamadı.",
+      });
+    }
+
+    // Mevcut bookmark'ı kontrol et
+    const existingBookmark = await Bookmark.findOne({
+      userId: req.user._id,
+      noteId: req.params.id,
+    });
+
+    if (existingBookmark) {
+      // Bookmark varsa sil
+      await Bookmark.findByIdAndDelete(existingBookmark._id);
+
+      res.status(200).json({
+        success: true,
+        message: "Not bookmark'tan çıkarıldı.",
+        data: {
+          isBookmarked: false,
+          noteId: note._id,
+          noteTitle: note.title,
+        },
+      });
+    } else {
+      // Bookmark yoksa ekle
+      const bookmark = new Bookmark({
+        userId: req.user._id,
+        noteId: req.params.id,
+      });
+
+      await bookmark.save();
+
+      res.status(201).json({
+        success: true,
+        message: "Not bookmark'a eklendi.",
+        data: {
+          isBookmarked: true,
+          bookmarkId: bookmark._id,
+          noteId: note._id,
+          noteTitle: note.title,
+          bookmarkedAt: bookmark.bookmarkedAt,
+        },
+      });
+    }
+  } catch (error) {
+    console.error("Bookmark toggle hatası:", error);
+    res.status(500).json({
+      success: false,
+      message: "Bookmark işlemi sırasında bir hata oluştu.",
+      error: error.message,
+    });
+  }
+};
+
+// @desc    Bookmark'ları listele
+// @route   GET /api/bookmarks
+// @access  Private
+const getBookmarks = async (req, res) => {
+  try {
+    const {
+      page = 1,
+      limit = 10,
+      search,
+      tags,
+      sortBy = "bookmarkedAt",
+      sortOrder = "desc",
+    } = req.query;
+
+    const filter = { userId: req.user._id };
+
+    const sort = {};
+    sort[sortBy] = sortOrder === "desc" ? -1 : 1;
+
+    const skip = (page - 1) * limit;
+
+    let query = Bookmark.find(filter)
+      .populate({
+        path: "noteId",
+        match: { isPublic: true },
+        select: "title content tags images createdAt",
+        populate: {
+          path: "userId",
+          select: "firstName lastName",
+        },
+      })
+      .sort(sort)
+      .skip(skip)
+      .limit(parseInt(limit));
+
+    // Eğer search veya tags varsa, note'lara göre filtrele
+    if (search || tags) {
+      const noteFilter = { isPublic: true };
+
+      if (search) {
+        noteFilter.$or = [
+          { title: { $regex: search, $options: "i" } },
+          { content: { $regex: search, $options: "i" } },
+        ];
+      }
+
+      if (tags) {
+        const tagArray = Array.isArray(tags) ? tags : tags.split(",");
+        noteFilter.tags = { $in: tagArray };
+      }
+
+      query = Bookmark.find(filter)
+        .populate({
+          path: "noteId",
+          match: noteFilter,
+          select: "title content tags images createdAt",
+          populate: {
+            path: "userId",
+            select: "firstName lastName",
+          },
+        })
+        .sort(sort)
+        .skip(skip)
+        .limit(parseInt(limit));
+    }
+
+    const bookmarks = await query;
+
+    // Null note'ları filtrele (silinmiş public notlar)
+    const validBookmarks = bookmarks.filter((bookmark) => bookmark.noteId);
+
+    const total = await Bookmark.countDocuments(filter);
+
+    res.status(200).json({
+      success: true,
+      data: {
+        bookmarks: validBookmarks,
+        pagination: {
+          currentPage: parseInt(page),
+          totalPages: Math.ceil(total / limit),
+          totalBookmarks: total,
+          hasNext: page * limit < total,
+          hasPrev: page > 1,
+        },
+      },
+    });
+  } catch (error) {
+    console.error("Bookmark'ları getirme hatası:", error);
+    res.status(500).json({
+      success: false,
+      message: "Bookmark'lar getirilirken bir hata oluştu.",
+      error: error.message,
+    });
+  }
+};
+
+// @desc    Tüm tagları listele
+// @route   GET /api/notes/tags
+// @access  Private
+const getAllTags = async (req, res) => {
+  try {
+    const tags = await Note.distinct("tags", { userId: req.user._id });
+
+    res.status(200).json({
+      success: true,
+      data: {
+        tags: tags.filter((tag) => tag && tag.trim() !== ""),
+      },
+    });
+  } catch (error) {
+    console.error("Tagları getirme hatası:", error);
+    res.status(500).json({
+      success: false,
+      message: "Taglar getirilirken bir hata oluştu.",
+      error: error.message,
+    });
+  }
+};
+
 module.exports = {
   getNotes,
   getNoteById,
@@ -297,4 +576,8 @@ module.exports = {
   updateNote,
   deleteNote,
   getNoteImage,
+  getPublicNotes,
+  toggleBookmark,
+  getBookmarks,
+  getAllTags,
 };

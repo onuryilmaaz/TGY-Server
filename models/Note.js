@@ -42,8 +42,23 @@ const noteSchema = new mongoose.Schema(
       },
     ],
     userId: {
-      type: String,
-      default: "temp-user-id",
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+    tags: {
+      type: [String],
+      validate: {
+        validator: function (tags) {
+          return tags.length <= 5;
+        },
+        message: "Maksimum 5 tag eklenebilir",
+      },
+      default: [],
+    },
+    isPublic: {
+      type: Boolean,
+      default: false,
     },
   },
   {
@@ -53,6 +68,9 @@ const noteSchema = new mongoose.Schema(
 
 noteSchema.index({ userId: 1, createdAt: -1 });
 noteSchema.index({ userId: 1, title: "text", content: "text" });
+noteSchema.index({ isPublic: 1, createdAt: -1 });
+noteSchema.index({ tags: 1 });
+noteSchema.index({ userId: 1, tags: 1 });
 
 noteSchema.virtual("url").get(function () {
   return `/api/notes/${this._id}`;

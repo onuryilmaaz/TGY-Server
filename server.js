@@ -41,18 +41,21 @@ app.get("/", (req, res) => {
         updateProfile: "PUT /api/auth/profile",
       },
       ai: {
-        summarizeText: "POST /api/ai/summarize-text - Metinleri özetler",
-        analyzeImage: "POST /api/ai/analyze-image - Görselleri analiz eder",
-        uploadImage: "POST /api/ai/upload-image - Resimleri yükler ve saklar",
+        summarizeText:
+          "POST /api/ai/summarize-text - Metinleri özetler (Auth gerekli)",
+        analyzeImage:
+          "POST /api/ai/analyze-image - Görselleri analiz eder (Auth gerekli)",
+        uploadImage:
+          "POST /api/ai/upload-image - Resimleri yükler ve saklar (Auth gerekli)",
       },
       notes: {
-        getAllNotes: "GET /api/notes - Tüm notları listele",
-        getNoteById: "GET /api/notes/:id - Tek not getir",
-        createNote: "POST /api/notes - Yeni not oluştur",
-        updateNote: "PUT /api/notes/:id - Not güncelle",
-        deleteNote: "DELETE /api/notes/:id - Not sil",
+        getAllNotes: "GET /api/notes - Tüm notları listele (Auth gerekli)",
+        getNoteById: "GET /api/notes/:id - Tek not getir (Auth gerekli)",
+        createNote: "POST /api/notes - Yeni not oluştur (Auth gerekli)",
+        updateNote: "PUT /api/notes/:id - Not güncelle (Auth gerekli)",
+        deleteNote: "DELETE /api/notes/:id - Not sil (Auth gerekli)",
         getNoteImage:
-          "GET /api/notes/:id/image/:fileName - Not resmini güvenli şekilde getir",
+          "GET /api/notes/:id/image/:fileName - Not resmini güvenli şekilde getir (Auth gerekli)",
       },
     },
   });

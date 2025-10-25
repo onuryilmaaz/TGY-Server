@@ -5,12 +5,13 @@ const {
   createTextSummarizePrompt,
   createImageAnalysisPrompt,
 } = require("../utils/prompts");
+const AnalyzedImage = require("../models/AnalyzedImage");
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 // @desc    Verilen metni özetler
 // @route   POST /api/ai/summarize-text
-// @access  Public
+// @access  Private
 const summarizeText = async (req, res) => {
   try {
     const { text, summaryLength = "orta" } = req.body;
@@ -90,7 +91,7 @@ const summarizeText = async (req, res) => {
 
 // @desc    Görsel analizi yapar
 // @route   POST /api/ai/analyze-image
-// @access  Public
+// @access  Private
 const analyzeImage = async (req, res) => {
   try {
     const { userText = "Bu görseli analiz et" } = req.body;
@@ -144,6 +145,14 @@ const analyzeImage = async (req, res) => {
       });
     }
 
+    // Resmi kaydet
+    const timestamp = Date.now();
+    const fileExtension = path.extname(imageFile.originalname);
+    const fileName = `analyzed_${timestamp}${fileExtension}`;
+    const filePath = path.join("uploads", "images", fileName);
+
+    fs.writeFileSync(filePath, imageFile.buffer);
+
     const prompt = createImageAnalysisPrompt(userText);
 
     const imageData = {
@@ -161,11 +170,49 @@ const analyzeImage = async (req, res) => {
     const cleanedText = rawText
       .replace(/^```json\s*/i, "")
       .replace(/```\s*$/i, "")
+      .replace(/^```\s*/i, "")
+      .replace(/```\s*$/i, "")
+      .replace(/^\s*```json\s*/i, "")
+      .replace(/```\s*$/i, "")
+      .replace(/\n\s*\n/g, "\n") // Çoklu boş satırları tek boş satıra çevir
+      .replace(/\s+/g, " ") // Çoklu boşlukları tek boşluğa çevir
+      .replace(/\*\*\s*/g, "**") // ** işaretlerinden sonraki boşlukları temizle
+      .replace(/\*\s*\*/g, "**") // * * şeklindeki boşlukları temizle
+      .replace(/\n\s*\*\s*/g, "\n* ") // Liste işaretlerini düzenle
+      .replace(/\n\s*-\s*/g, "\n- ") // Liste işaretlerini düzenle
       .trim();
 
     let data;
     try {
       data = JSON.parse(cleanedText);
+
+      // JSON parse'dan sonra da temizleme yap
+      if (data.description) {
+        data.description = data.description
+          .replace(/\n\s*\n/g, "\n")
+          .replace(/\s+/g, " ")
+          .replace(/\*\*\s*/g, "**")
+          .replace(/\*\s*\*/g, "**")
+          .trim();
+      }
+
+      if (data.detailedAnalysis) {
+        data.detailedAnalysis = data.detailedAnalysis
+          .replace(/\n\s*\n/g, "\n")
+          .replace(/\s+/g, " ")
+          .replace(/\*\*\s*/g, "**")
+          .replace(/\*\s*\*/g, "**")
+          .replace(/\n\s*\*\s*/g, "\n* ")
+          .replace(/\n\s*-\s*/g, "\n- ")
+          .trim();
+      }
+
+      if (data.textInImage) {
+        data.textInImage = data.textInImage
+          .replace(/\n\s*\n/g, "\n")
+          .replace(/\s+/g, " ")
+          .trim();
+      }
     } catch (parseError) {
       console.error("JSON parse hatası:", parseError);
       return res.status(500).json({
@@ -174,10 +221,28 @@ const analyzeImage = async (req, res) => {
       });
     }
 
-    data.imageInfo = {
-      fileName: imageFile.originalname,
+    // Veritabanına kaydet
+    const analyzedImage = new AnalyzedImage({
+      userId: req.user._id,
+      originalName: imageFile.originalname,
+      fileName: fileName,
+      filePath: `/uploads/images/${fileName}`,
       fileSize: imageFile.size,
       mimeType: imageFile.mimetype,
+      userPrompt: userText,
+      analysisResult: data,
+    });
+
+    await analyzedImage.save();
+
+    data.imageInfo = {
+      fileName: fileName,
+      filePath: `/uploads/images/${fileName}`,
+      originalName: imageFile.originalname,
+      fileSize: imageFile.size,
+      mimeType: imageFile.mimetype,
+      savedAt: new Date().toISOString(),
+      recordId: analyzedImage._id,
     };
 
     res.status(200).json({
@@ -196,7 +261,7 @@ const analyzeImage = async (req, res) => {
 
 // @desc    Resim yükler ve dosya sistemine kaydeder
 // @route   POST /api/ai/upload-image
-// @access  Public
+// @access  Private
 const uploadImage = async (req, res) => {
   try {
     const imageFile = req.file;
@@ -261,8 +326,48 @@ const uploadImage = async (req, res) => {
   }
 };
 
+// @desc    Analiz geçmişini getir
+// @route   GET /api/ai/analysis-history
+// @access  Private
+const getAnalysisHistory = async (req, res) => {
+  try {
+    const { page = 1, limit = 10 } = req.query;
+    const skip = (page - 1) * limit;
+
+    const analyses = await AnalyzedImage.find({ userId: req.user._id })
+      .sort({ analyzedAt: -1 })
+      .skip(skip)
+      .limit(parseInt(limit))
+      .select("-__v");
+
+    const total = await AnalyzedImage.countDocuments({ userId: req.user._id });
+
+    res.status(200).json({
+      success: true,
+      data: {
+        analyses,
+        pagination: {
+          currentPage: parseInt(page),
+          totalPages: Math.ceil(total / limit),
+          totalAnalyses: total,
+          hasNext: page * limit < total,
+          hasPrev: page > 1,
+        },
+      },
+    });
+  } catch (error) {
+    console.error("Analiz geçmişi getirme hatası:", error);
+    res.status(500).json({
+      success: false,
+      message: "Analiz geçmişi getirilirken bir hata oluştu.",
+      error: error.message,
+    });
+  }
+};
+
 module.exports = {
   summarizeText,
   analyzeImage,
   uploadImage,
+  getAnalysisHistory,
 };
