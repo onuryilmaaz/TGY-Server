@@ -84,6 +84,8 @@ const getNoteById = async (req, res) => {
       });
     }
 
+    note.images.sort((a, b) => (a.position ?? 0) - (b.position ?? 0));
+
     res.status(200).json({
       success: true,
       data: note,
@@ -102,8 +104,15 @@ const getNoteById = async (req, res) => {
 // @route   POST /api/notes
 // @access  Private
 const createNote = async (req, res) => {
+  console.log("createNote çalıştı");
   try {
-    const { title, content, images, tags = [], isPublic = false } = req.body;
+    const {
+      title,
+      content,
+      images = [],
+      tags = [],
+      isPublic = false,
+    } = req.body;
 
     if (!title || !content) {
       return res.status(400).json({
@@ -112,20 +121,24 @@ const createNote = async (req, res) => {
       });
     }
 
-    // Tag validasyonu
-    if (tags && tags.length > 5) {
+    if (tags.length > 5) {
       return res.status(400).json({
         success: false,
         message: "Maksimum 5 tag eklenebilir.",
       });
     }
 
+    // Görselleri konuma göre sırala
+    const sortedImages = Array.isArray(images)
+      ? images.sort((a, b) => (a.position ?? 0) - (b.position ?? 0))
+      : [];
+
     const note = new Note({
       title,
       content,
-      images: images || [],
-      tags: tags || [],
-      isPublic: isPublic || false,
+      images: sortedImages,
+      tags,
+      isPublic,
       userId: req.user._id,
     });
 
@@ -153,7 +166,6 @@ const updateNote = async (req, res) => {
   try {
     const { title, content, images, tags, isPublic } = req.body;
 
-    // Tag validasyonu
     if (tags && tags.length > 5) {
       return res.status(400).json({
         success: false,
@@ -162,9 +174,14 @@ const updateNote = async (req, res) => {
     }
 
     const updateData = {};
+
     if (title !== undefined) updateData.title = title;
     if (content !== undefined) updateData.content = content;
-    if (images !== undefined) updateData.images = images;
+    if (images !== undefined) {
+      updateData.images = images.sort(
+        (a, b) => (a.position ?? 0) - (b.position ?? 0)
+      );
+    }
     if (tags !== undefined) updateData.tags = tags;
     if (isPublic !== undefined) updateData.isPublic = isPublic;
 

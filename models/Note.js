@@ -6,7 +6,6 @@ const noteSchema = new mongoose.Schema(
       type: String,
       required: [true, "Not başlığı gereklidir"],
       trim: true,
-      maxlength: [200, "Başlık 200 karakterden uzun olamaz"],
     },
     content: {
       type: String,
@@ -19,11 +18,11 @@ const noteSchema = new mongoose.Schema(
           type: String,
           required: true,
         },
-        originalName: {
-          type: String,
+        fileUrl: {
+          type: String, // 👈 artık filePath yerine bu kullanılıyor
           required: true,
         },
-        filePath: {
+        mimeType: {
           type: String,
           required: true,
         },
@@ -31,13 +30,13 @@ const noteSchema = new mongoose.Schema(
           type: Number,
           required: true,
         },
-        mimeType: {
-          type: String,
-          required: true,
-        },
         uploadedAt: {
           type: Date,
           default: Date.now,
+        },
+        position: {
+          type: Number,
+          default: null,
         },
       },
     ],
@@ -66,12 +65,14 @@ const noteSchema = new mongoose.Schema(
   }
 );
 
+// 🔹 Index’ler (değişmedi)
 noteSchema.index({ userId: 1, createdAt: -1 });
 noteSchema.index({ userId: 1, title: "text", content: "text" });
 noteSchema.index({ isPublic: 1, createdAt: -1 });
 noteSchema.index({ tags: 1 });
 noteSchema.index({ userId: 1, tags: 1 });
 
+// 🔹 Virtual alan
 noteSchema.virtual("url").get(function () {
   return `/api/notes/${this._id}`;
 });

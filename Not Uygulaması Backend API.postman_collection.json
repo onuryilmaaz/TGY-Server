@@ -2,7 +2,7 @@
   "info": {
     "_postman_id": "b0d98e76-4e89-47c4-9b4d-21d56d61cacd",
     "name": "Not Uygulaması Backend API",
-    "description": "Authentication & AI API endpoints for Note App Backend",
+    "description": "Authentication & AI API endpoints for Note App Backend (görsel konum desteği eklendi)",
     "schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json",
     "_exporter_id": "37015732"
   },
@@ -14,19 +14,13 @@
           "name": "Register",
           "request": {
             "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"firstName\": \"Ahmet\",\n  \"lastName\": \"Yılmaz\",\n  \"email\": \"ahmet@example.com\",\n  \"password\": \"password123\",\n  \"confirmPassword\": \"password123\"\n}"
             },
             "url": "{{baseUrl}}/api/auth/register"
-          },
-          "response": []
+          }
         },
         {
           "name": "Login",
@@ -42,76 +36,44 @@
                   "        console.log('Token saved:', response.data.token);",
                   "    }",
                   "}"
-                ],
-                "type": "text/javascript",
-                "packages": {},
-                "requests": {}
+                ]
               }
             }
           ],
           "request": {
             "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"email\": \"onur@gmail.com\",\n  \"password\": \"Onur.123\"\n}"
             },
             "url": "{{baseUrl}}/api/auth/login"
-          },
-          "response": []
+          }
         },
         {
           "name": "Get Profile",
           "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": {
-                "token": "{{token}}"
-              }
-            },
+            "auth": { "type": "bearer", "bearer": { "token": "{{token}}" } },
             "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}"
-              }
-            ],
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
             "url": "{{baseUrl}}/api/auth/profile"
-          },
-          "response": []
+          }
         },
         {
           "name": "Update Profile",
           "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": {
-                "token": "{{token}}"
-              }
-            },
+            "auth": { "type": "bearer", "bearer": { "token": "{{token}}" } },
             "method": "PUT",
             "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}"
-              }
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
             ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"firstName\": \"Ahmet Güncellenmiş\",\n  \"lastName\": \"Yılmaz Güncellenmiş\",\n  \"email\": \"ahmet.guncellenmis@example.com\"\n}"
             },
             "url": "{{baseUrl}}/api/auth/profile"
-          },
-          "response": []
+          }
         }
       ]
     },
@@ -121,47 +83,25 @@
         {
           "name": "Summarize Text",
           "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": {
-                "token": "{{token}}"
-              }
-            },
+            "auth": { "type": "bearer", "bearer": { "token": "{{token}}" } },
             "method": "POST",
             "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}"
-              }
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"text\": \"Bu hafta toplantıda ele alınan konular: 1) Proje timeline'ının güncellenmesi - backend geliştirme 2 hafta gecikecek. 2) Yeni UI tasarımları onaylandı, frontend ekibi pazartesi başlayacak. 3) Test süreçleri için QA ekibi ile koordinasyon kurulacak. 4) Veritabanı optimizasyonu için DBA ile görüşme planlandı. 5) Güvenlik testleri için external firma ile anlaşma yapılacak. Bir sonraki toplantı gelecek salı saat 14:00'da.\",\n  \"summaryLength\": \"orta\"\n}"
+              "raw": "{\n  \"text\": \"Bu hafta toplantıda ele alınan konular...\",\n  \"summaryLength\": \"orta\"\n}"
             },
             "url": "{{baseUrl}}/api/ai/summarize-text"
-          },
-          "response": []
+          }
         },
         {
           "name": "Analyze Image",
           "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": {
-                "token": "{{token}}"
-              }
-            },
+            "auth": { "type": "bearer", "bearer": { "token": "{{token}}" } },
             "method": "POST",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}"
-              }
-            ],
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
             "body": {
               "mode": "formdata",
               "formdata": [
@@ -178,72 +118,36 @@
               ]
             },
             "url": "{{baseUrl}}/api/ai/analyze-image"
-          },
-          "response": []
+          }
         },
         {
-          "name": "Upload Image",
+          "name": "Upload Image (güncellendi)",
           "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": {
-                "token": "{{token}}"
-              }
-            },
+            "auth": { "type": "bearer", "bearer": { "token": "{{token}}" } },
             "method": "POST",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}"
-              }
-            ],
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
             "body": {
               "mode": "formdata",
               "formdata": [
                 {
-                  "key": "image",
+                  "key": "imageFile",
                   "type": "file",
-                  "src": "/Users/onur/Downloads/pexels-zeynep-sude-emek-193601188-13351023.jpg"
-                }
+                  "src": "/Users/onur/Downloads/test-image.jpg"
+                },
+                { "key": "position", "value": "42", "type": "text" }
               ]
             },
             "url": "{{baseUrl}}/api/ai/upload-image"
-          },
-          "response": []
+          }
         },
         {
           "name": "Get Analysis History",
           "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": {
-                "token": "{{token}}"
-              }
-            },
+            "auth": { "type": "bearer", "bearer": { "token": "{{token}}" } },
             "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/ai/analysis-history?page=1&limit=10",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "ai", "analysis-history"],
-              "query": [
-                {
-                  "key": "page",
-                  "value": "1"
-                },
-                {
-                  "key": "limit",
-                  "value": "10"
-                }
-              ]
-            }
-          },
-          "response": []
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/api/ai/analysis-history?page=1&limit=10"
+          }
         }
       ]
     },
@@ -253,363 +157,124 @@
         {
           "name": "Get All Notes",
           "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": {
-                "token": "{{token}}"
-              }
-            },
+            "auth": { "type": "bearer", "bearer": { "token": "{{token}}" } },
             "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/notes?page=1&limit=10",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "notes"],
-              "query": [
-                {
-                  "key": "page",
-                  "value": "1"
-                },
-                {
-                  "key": "limit",
-                  "value": "10"
-                }
-              ]
-            }
-          },
-          "response": []
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/api/notes?page=1&limit=10"
+          }
         },
         {
           "name": "Get Notes with Search",
           "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": {
-                "token": "{{token}}"
-              }
-            },
+            "auth": { "type": "bearer", "bearer": { "token": "{{token}}" } },
             "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/notes?search=JavaScript&page=1&limit=5",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "notes"],
-              "query": [
-                {
-                  "key": "search",
-                  "value": "JavaScript"
-                },
-                {
-                  "key": "page",
-                  "value": "1"
-                },
-                {
-                  "key": "limit",
-                  "value": "5"
-                }
-              ]
-            }
-          },
-          "response": []
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/api/notes?search=JavaScript&page=1&limit=5"
+          }
         },
         {
           "name": "Get Note by ID",
           "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": {
-                "token": "{{token}}"
-              }
-            },
+            "auth": { "type": "bearer", "bearer": { "token": "{{token}}" } },
             "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}"
-              }
-            ],
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
             "url": "{{baseUrl}}/api/notes/68fce4475baaffcfedd195cb"
-          },
-          "response": []
+          }
         },
         {
-          "name": "Create Note",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "if (pm.response.code === 201) {",
-                  "    const response = pm.response.json();",
-                  "    if (response.data && response.data._id) {",
-                  "        pm.collectionVariables.set('noteId', response.data._id);",
-                  "        console.log('Note ID saved:', response.data._id);",
-                  "    }",
-                  "}"
-                ],
-                "type": "text/javascript",
-                "packages": {},
-                "requests": {}
-              }
-            }
-          ],
+          "name": "Create Note (güncellendi)",
           "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": {
-                "token": "{{token}}"
-              }
-            },
+            "auth": { "type": "bearer", "bearer": { "token": "{{token}}" } },
             "method": "POST",
             "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}"
-              }
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"title\": \"JavaScript Notları\",\n  \"content\": \"JavaScript ile ilgili önemli notlar: Arrow functions, Async/await, Promises, ES6+ özellikleri\",\n  \"tags\": [\"javascript\", \"react\", \"web\"],\n  \"isPublic\": true,\n  \"images\": [{\n        \"fileName\": \"image_1761403860669.jpg\",\n        \"originalName\": \"pexels-pixabay-45201.jpg\",\n        \"filePath\": \"/uploads/images/image_1761403860669.jpg\",\n        \"fileSize\": 412821,\n        \"mimeType\": \"image/jpeg\",\n        \"uploadedAt\": \"2025-10-25T14:51:00.671Z\"\n    }]\n}"
+              "raw": "{\n  \"title\": \"JavaScript Notları\",\n  \"content\": \"Arrow functions, async/await ve diğerleri\",\n  \"tags\": [\"javascript\", \"react\", \"web\"],\n  \"isPublic\": true,\n  \"images\": [{\n    \"fileName\": \"image_1761403860669.jpg\",\n    \"originalName\": \"pexels-pixabay-45201.jpg\",\n    \"filePath\": \"/uploads/images/image_1761403860669.jpg\",\n    \"fileSize\": 412821,\n    \"mimeType\": \"image/jpeg\",\n    \"uploadedAt\": \"2025-10-25T14:51:00.671Z\",\n    \"position\": 15\n  }]\n}"
             },
             "url": "{{baseUrl}}/api/notes"
-          },
-          "response": []
+          }
         },
         {
-          "name": "Update Note",
+          "name": "Update Note (güncellendi)",
           "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": {
-                "token": "{{token}}"
-              }
-            },
+            "auth": { "type": "bearer", "bearer": { "token": "{{token}}" } },
             "method": "PUT",
             "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}"
-              }
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"title\": \"Güncellenmiş JavaScript Notları\",\n  \"content\": \"JavaScript notları güncellendi. Yeni konular eklendi:\\n- TypeScript\\n- React Hooks\\n- Node.js\",\n  \"tags\": [\"javascript\", \"typescript\", \"react\", \"nodejs\"],\n  \"isPublic\": true,\n  \"images\" : [{\n        \"fileName\": \"image_1761404156770.jpg\",\n        \"originalName\": \"pexels-zeynep-sude-emek-193601188-13351023.jpg\",\n        \"filePath\": \"/uploads/images/image_1761404156770.jpg\",\n        \"fileSize\": 1641946,\n        \"mimeType\": \"image/jpeg\",\n        \"uploadedAt\": \"2025-10-25T14:55:56.773Z\"\n    }]\n}"
+              "raw": "{\n  \"title\": \"Güncellenmiş JavaScript Notları\",\n  \"content\": \"Yeni konular: TypeScript, React Hooks\",\n  \"tags\": [\"javascript\", \"typescript\"],\n  \"isPublic\": true,\n  \"images\": [{\n    \"fileName\": \"image_1761404156770.jpg\",\n    \"originalName\": \"pexels-zeynep-sude-emek-193601188-13351023.jpg\",\n    \"filePath\": \"/uploads/images/image_1761404156770.jpg\",\n    \"fileSize\": 1641946,\n    \"mimeType\": \"image/jpeg\",\n    \"uploadedAt\": \"2025-10-25T14:55:56.773Z\",\n    \"position\": 28\n  }]\n}"
             },
             "url": "{{baseUrl}}/api/notes/68fce4475baaffcfedd195cb"
-          },
-          "response": []
+          }
         },
         {
           "name": "Delete Note",
           "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": {
-                "token": "{{token}}"
-              }
-            },
+            "auth": { "type": "bearer", "bearer": { "token": "{{token}}" } },
             "method": "DELETE",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}"
-              }
-            ],
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
             "url": "{{baseUrl}}/api/notes/{{noteId}}"
-          },
-          "response": []
+          }
         },
         {
           "name": "Get All Tags",
           "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": {
-                "token": "{{token}}"
-              }
-            },
+            "auth": { "type": "bearer", "bearer": { "token": "{{token}}" } },
             "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}"
-              }
-            ],
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
             "url": "{{baseUrl}}/api/notes/tags"
-          },
-          "response": []
+          }
         },
         {
           "name": "Get Public Notes",
           "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": {
-                "token": "{{token}}"
-              }
-            },
+            "auth": { "type": "bearer", "bearer": { "token": "{{token}}" } },
             "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/api/notes/public?page=1&limit=10",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "notes", "public"],
-              "query": [
-                {
-                  "key": "page",
-                  "value": "1"
-                },
-                {
-                  "key": "limit",
-                  "value": "10"
-                }
-              ]
-            }
-          },
-          "response": []
+            "url": "{{baseUrl}}/api/notes/public?page=1&limit=10"
+          }
         },
         {
           "name": "Bookmark Toggle Note",
           "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": {
-                "token": "{{token}}"
-              }
-            },
+            "auth": { "type": "bearer", "bearer": { "token": "{{token}}" } },
             "method": "POST",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}"
-              }
-            ],
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
             "url": "{{baseUrl}}/api/notes/public/68fce4475baaffcfedd195cb/bookmark"
-          },
-          "response": []
+          }
         },
         {
           "name": "Get Bookmarks",
           "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": {
-                "token": "{{token}}"
-              }
-            },
+            "auth": { "type": "bearer", "bearer": { "token": "{{token}}" } },
             "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/notes/bookmarks?page=1&limit=10",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "notes", "bookmarks"],
-              "query": [
-                {
-                  "key": "page",
-                  "value": "1"
-                },
-                {
-                  "key": "limit",
-                  "value": "10"
-                }
-              ]
-            }
-          },
-          "response": []
+            "url": "{{baseUrl}}/api/notes/bookmarks?page=1&limit=10"
+          }
         },
         {
           "name": "Get Notes Image",
           "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": {
-                "token": "{{token}}"
-              }
-            },
+            "auth": { "type": "bearer", "bearer": { "token": "{{token}}" } },
             "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}"
-              }
-            ],
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
             "url": "{{baseUrl}}/api/notes/68fce4475baaffcfedd195cb/image/image_1761404156770.jpg"
-          },
-          "response": []
+          }
         }
       ]
     },
     {
       "name": "Health Check",
-      "request": {
-        "method": "GET",
-        "header": [],
-        "url": "{{baseUrl}}/"
-      },
-      "response": []
-    }
-  ],
-  "auth": {
-    "type": "bearer",
-    "bearer": {
-      "token": "{{token}}"
-    }
-  },
-  "event": [
-    {
-      "listen": "prerequest",
-      "script": {
-        "type": "text/javascript",
-        "packages": {},
-        "requests": {},
-        "exec": [""]
-      }
-    },
-    {
-      "listen": "test",
-      "script": {
-        "type": "text/javascript",
-        "packages": {},
-        "requests": {},
-        "exec": [""]
-      }
+      "request": { "method": "GET", "url": "{{baseUrl}}/" }
     }
   ],
   "variable": [
-    {
-      "key": "baseUrl",
-      "value": "https://sotodoserver.onrender.com"
-    },
-    {
-      "key": "token",
-      "value": ""
-    },
-    {
-      "key": "noteId",
-      "value": ""
-    }
+    { "key": "baseUrl", "value": "https://sotodoserver.onrender.com" },
+    { "key": "token", "value": "" },
+    { "key": "noteId", "value": "" }
   ]
 }

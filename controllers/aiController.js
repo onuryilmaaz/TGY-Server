@@ -145,14 +145,7 @@ const analyzeImage = async (req, res) => {
       });
     }
 
-    // Resmi kaydet
-    const timestamp = Date.now();
-    const fileExtension = path.extname(imageFile.originalname);
-    const fileName = `analyzed_${timestamp}${fileExtension}`;
-    const filePath = path.join("uploads", "images", fileName);
-
-    fs.writeFileSync(filePath, imageFile.buffer);
-
+    // Kaydetmeden direkt AI'ya gönder
     const prompt = createImageAnalysisPrompt(userText);
 
     const imageData = {
@@ -172,82 +165,21 @@ const analyzeImage = async (req, res) => {
       .replace(/```\s*$/i, "")
       .replace(/^```\s*/i, "")
       .replace(/```\s*$/i, "")
-      .replace(/^\s*```json\s*/i, "")
-      .replace(/```\s*$/i, "")
-      .replace(/\n\s*\n/g, "\n") // Çoklu boş satırları tek boş satıra çevir
-      .replace(/\s+/g, " ") // Çoklu boşlukları tek boşluğa çevir
-      .replace(/\*\*\s*/g, "**") // ** işaretlerinden sonraki boşlukları temizle
-      .replace(/\*\s*\*/g, "**") // * * şeklindeki boşlukları temizle
-      .replace(/\n\s*\*\s*/g, "\n* ") // Liste işaretlerini düzenle
-      .replace(/\n\s*-\s*/g, "\n- ") // Liste işaretlerini düzenle
+      .replace(/\n\s*\n/g, "\n")
+      .replace(/\s+/g, " ")
       .trim();
 
     let data;
     try {
       data = JSON.parse(cleanedText);
-
-      // JSON parse'dan sonra da temizleme yap
-      if (data.description) {
-        data.description = data.description
-          .replace(/\n\s*\n/g, "\n")
-          .replace(/\s+/g, " ")
-          .replace(/\*\*\s*/g, "**")
-          .replace(/\*\s*\*/g, "**")
-          .trim();
-      }
-
-      if (data.detailedAnalysis) {
-        data.detailedAnalysis = data.detailedAnalysis
-          .replace(/\n\s*\n/g, "\n")
-          .replace(/\s+/g, " ")
-          .replace(/\*\*\s*/g, "**")
-          .replace(/\*\s*\*/g, "**")
-          .replace(/\n\s*\*\s*/g, "\n* ")
-          .replace(/\n\s*-\s*/g, "\n- ")
-          .trim();
-      }
-
-      if (data.textInImage) {
-        data.textInImage = data.textInImage
-          .replace(/\n\s*\n/g, "\n")
-          .replace(/\s+/g, " ")
-          .trim();
-      }
-    } catch (parseError) {
-      console.error("JSON parse hatası:", parseError);
-      return res.status(500).json({
-        success: false,
-        message: "AI yanıtı işlenirken hata oluştu.",
-      });
+    } catch {
+      data = { rawText: cleanedText }; // JSON değilse düz metin olarak dön
     }
 
-    // Veritabanına kaydet
-    const analyzedImage = new AnalyzedImage({
-      userId: req.user._id,
-      originalName: imageFile.originalname,
-      fileName: fileName,
-      filePath: `/uploads/images/${fileName}`,
-      fileSize: imageFile.size,
-      mimeType: imageFile.mimetype,
-      userPrompt: userText,
-      analysisResult: data,
-    });
-
-    await analyzedImage.save();
-
-    data.imageInfo = {
-      fileName: fileName,
-      filePath: `/uploads/images/${fileName}`,
-      originalName: imageFile.originalname,
-      fileSize: imageFile.size,
-      mimeType: imageFile.mimetype,
-      savedAt: new Date().toISOString(),
-      recordId: analyzedImage._id,
-    };
-
+    // Sadece analiz sonucunu döndür
     res.status(200).json({
       success: true,
-      data: data,
+      data,
     });
   } catch (error) {
     console.error("Görsel analizi hatası:", error);
@@ -265,6 +197,7 @@ const analyzeImage = async (req, res) => {
 const uploadImage = async (req, res) => {
   try {
     const imageFile = req.file;
+    const { position } = req.body; // Swift tarafında textView içindeki index konumu
 
     if (!imageFile) {
       return res.status(400).json({
@@ -299,8 +232,13 @@ const uploadImage = async (req, res) => {
     const timestamp = Date.now();
     const fileExtension = path.extname(imageFile.originalname);
     const fileName = `image_${timestamp}${fileExtension}`;
-    const filePath = path.join("uploads", "images", fileName);
+    const uploadDir = path.join("uploads", "images");
 
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true });
+    }
+
+    const filePath = path.join(uploadDir, fileName);
     fs.writeFileSync(filePath, imageFile.buffer);
 
     const fileUrl = `/uploads/images/${fileName}`;
@@ -308,11 +246,11 @@ const uploadImage = async (req, res) => {
     res.status(200).json({
       success: true,
       data: {
-        fileName: fileName,
-        originalName: imageFile.originalname,
-        filePath: fileUrl,
-        fileSize: imageFile.size,
+        fileName,
+        fileUrl,
         mimeType: imageFile.mimetype,
+        fileSize: imageFile.size,
+        position: position ? Number(position) : null,
         uploadedAt: new Date().toISOString(),
       },
     });

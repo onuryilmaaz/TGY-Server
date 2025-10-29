@@ -42,13 +42,13 @@ router.post("/summarize-text", authenticateToken, summarizeText);
 router.post(
   "/analyze-image",
   authenticateToken,
-  upload.single("image"),
+  upload.single("imageFile"),
   analyzeImage
 );
 router.post(
   "/upload-image",
   authenticateToken,
-  upload.single("image"),
+  upload.single("imageFile"),
   uploadImage
 );
 router.get("/analysis-history", authenticateToken, getAnalysisHistory);
