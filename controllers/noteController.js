@@ -114,13 +114,20 @@ const createNote = async (req, res) => {
       isPublic = false,
     } = req.body;
 
-    if (!title || !content) {
+    // 🔹 En az bir alan dolu olmalı
+    const hasContent =
+      (title && title.trim() !== "") ||
+      (content && content.trim() !== "") ||
+      (Array.isArray(images) && images.length > 0);
+
+    if (!hasContent) {
       return res.status(400).json({
         success: false,
-        message: "Başlık ve içerik gereklidir.",
+        message: "En az bir alan (başlık, içerik veya görsel) doldurulmalıdır.",
       });
     }
 
+    // 🔹 Maksimum 5 tag kontrolü
     if (tags.length > 5) {
       return res.status(400).json({
         success: false,
@@ -128,7 +135,7 @@ const createNote = async (req, res) => {
       });
     }
 
-    // Görselleri konuma göre sırala
+    // 🔹 Görselleri sıralama
     const sortedImages = Array.isArray(images)
       ? images.sort((a, b) => (a.position ?? 0) - (b.position ?? 0))
       : [];
@@ -166,6 +173,7 @@ const updateNote = async (req, res) => {
   try {
     const { title, content, images, tags, isPublic } = req.body;
 
+    // 🔹 Maksimum 5 tag kontrolü
     if (tags && tags.length > 5) {
       return res.status(400).json({
         success: false,
@@ -173,6 +181,7 @@ const updateNote = async (req, res) => {
       });
     }
 
+    // 🔹 Güncellenecek veriler
     const updateData = {};
 
     if (title !== undefined) updateData.title = title;
@@ -184,6 +193,20 @@ const updateNote = async (req, res) => {
     }
     if (tags !== undefined) updateData.tags = tags;
     if (isPublic !== undefined) updateData.isPublic = isPublic;
+
+    // 🔹 Eğer hepsi boş ise engelle
+    const hasContent =
+      (updateData.title && updateData.title.trim() !== "") ||
+      (updateData.content && updateData.content.trim() !== "") ||
+      (Array.isArray(updateData.images) && updateData.images.length > 0);
+
+    if (!hasContent) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "En az bir alan (başlık, içerik veya görsel) güncellenmelidir.",
+      });
+    }
 
     const note = await Note.findOneAndUpdate(
       { _id: req.params.id, userId: req.user._id },
