@@ -18,6 +18,8 @@ const noteSchema = new mongoose.Schema(
         fileSize: { type: Number, required: true },
         uploadedAt: { type: Date, default: Date.now },
         position: { type: Number, default: null },
+        width: { type: Number, default: null },
+        height: { type: Number, default: null },
       },
     ],
     userId: {

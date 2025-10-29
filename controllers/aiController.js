@@ -1,6 +1,7 @@
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 const fs = require("fs");
 const path = require("path");
+const sharp = require("sharp");
 const {
   createTextSummarizePrompt,
   createImageAnalysisPrompt,
@@ -197,7 +198,7 @@ const analyzeImage = async (req, res) => {
 const uploadImage = async (req, res) => {
   try {
     const imageFile = req.file;
-    const { position } = req.body; // Swift tarafında textView içindeki index konumu
+    const { position } = req.body;
 
     if (!imageFile) {
       return res.status(400).json({
@@ -212,6 +213,7 @@ const uploadImage = async (req, res) => {
       "image/png",
       "image/webp",
       "image/gif",
+      "image/heic", // 🔹 iPhone için
     ];
 
     if (!supportedMimeTypes.includes(imageFile.mimetype)) {
@@ -230,7 +232,7 @@ const uploadImage = async (req, res) => {
     }
 
     const timestamp = Date.now();
-    const fileExtension = path.extname(imageFile.originalname);
+    const fileExtension = path.extname(imageFile.originalname) || ".jpg";
     const fileName = `image_${timestamp}${fileExtension}`;
     const uploadDir = path.join("uploads", "images");
 
@@ -239,10 +241,18 @@ const uploadImage = async (req, res) => {
     }
 
     const filePath = path.join(uploadDir, fileName);
-    fs.writeFileSync(filePath, imageFile.buffer);
+
+    // 🔹 Sharp ile metadata oku (gerçek çözünürlük)
+    const metadata = await sharp(imageFile.buffer).metadata();
+
+    // 🔹 Görseli orijinal çözünürlükte kaydet
+    await sharp(imageFile.buffer)
+      .jpeg({ quality: 90 }) // her zaman .jpeg olarak kaydedilir
+      .toFile(filePath);
 
     const fileUrl = `/uploads/images/${fileName}`;
 
+    // 🔹 Genişlik / yükseklik bilgilerini döndür
     res.status(200).json({
       success: true,
       data: {
@@ -251,6 +261,8 @@ const uploadImage = async (req, res) => {
         mimeType: imageFile.mimetype,
         fileSize: imageFile.size,
         position: position ? Number(position) : null,
+        width: metadata.width,
+        height: metadata.height,
         uploadedAt: new Date().toISOString(),
       },
     });
