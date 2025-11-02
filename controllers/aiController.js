@@ -2,11 +2,18 @@ const { GoogleGenerativeAI } = require("@google/generative-ai");
 const fs = require("fs");
 const path = require("path");
 const sharp = require("sharp");
+const cloudinary = require("cloudinary").v2;
 const {
   createTextSummarizePrompt,
   createImageAnalysisPrompt,
 } = require("../utils/prompts");
 const AnalyzedImage = require("../models/AnalyzedImage");
+
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
@@ -195,6 +202,87 @@ const analyzeImage = async (req, res) => {
 // @desc    Resim yükler ve dosya sistemine kaydeder
 // @route   POST /api/ai/upload-image
 // @access  Private
+// const uploadImage = async (req, res) => {
+//   try {
+//     const imageFile = req.file;
+//     const { position } = req.body;
+
+//     if (!imageFile) {
+//       return res.status(400).json({
+//         success: false,
+//         message: "Görsel dosyası gönderilmedi.",
+//       });
+//     }
+
+//     const supportedMimeTypes = [
+//       "image/jpeg",
+//       "image/jpg",
+//       "image/png",
+//       "image/webp",
+//       "image/gif",
+//       "image/heic", // 🔹 iPhone için
+//     ];
+
+//     if (!supportedMimeTypes.includes(imageFile.mimetype)) {
+//       return res.status(400).json({
+//         success: false,
+//         message:
+//           "Desteklenmeyen dosya formatı. JPEG, PNG, WebP veya GIF kullanın.",
+//       });
+//     }
+
+//     if (imageFile.size > 5 * 1024 * 1024) {
+//       return res.status(400).json({
+//         success: false,
+//         message: "Dosya boyutu çok büyük. Maksimum 5MB olmalı.",
+//       });
+//     }
+
+//     const timestamp = Date.now();
+//     const fileExtension = path.extname(imageFile.originalname) || ".jpg";
+//     const fileName = `image_${timestamp}${fileExtension}`;
+//     const uploadDir = path.join("uploads", "images");
+
+//     if (!fs.existsSync(uploadDir)) {
+//       fs.mkdirSync(uploadDir, { recursive: true });
+//     }
+
+//     const filePath = path.join(uploadDir, fileName);
+
+//     // 🔹 Sharp ile metadata oku (gerçek çözünürlük)
+//     const metadata = await sharp(imageFile.buffer).metadata();
+
+//     // 🔹 Görseli orijinal çözünürlükte kaydet
+//     await sharp(imageFile.buffer)
+//       .jpeg({ quality: 90 }) // her zaman .jpeg olarak kaydedilir
+//       .toFile(filePath);
+
+//     const fileUrl = `/uploads/images/${fileName}`;
+
+//     // 🔹 Genişlik / yükseklik bilgilerini döndür
+//     res.status(200).json({
+//       success: true,
+//       data: {
+//         fileName,
+//         fileUrl,
+//         mimeType: imageFile.mimetype,
+//         fileSize: imageFile.size,
+//         position: position ? Number(position) : null,
+//         width: metadata.width,
+//         height: metadata.height,
+//         uploadedAt: new Date().toISOString(),
+//       },
+//     });
+//   } catch (error) {
+//     console.error("Resim yükleme hatası:", error);
+//     res.status(500).json({
+//       success: false,
+//       message: "Resim yüklenirken bir hata meydana geldi.",
+//       error: error.message,
+//     });
+//   }
+// };
+
 const uploadImage = async (req, res) => {
   try {
     const imageFile = req.file;
@@ -213,7 +301,7 @@ const uploadImage = async (req, res) => {
       "image/png",
       "image/webp",
       "image/gif",
-      "image/heic", // 🔹 iPhone için
+      "image/heic",
     ];
 
     if (!supportedMimeTypes.includes(imageFile.mimetype)) {
@@ -231,33 +319,31 @@ const uploadImage = async (req, res) => {
       });
     }
 
-    const timestamp = Date.now();
-    const fileExtension = path.extname(imageFile.originalname) || ".jpg";
-    const fileName = `image_${timestamp}${fileExtension}`;
-    const uploadDir = path.join("uploads", "images");
+    // 🔹 Sharp buffer'ı Cloudinary'ye uygun hale getir
+    const processedBuffer = await sharp(imageFile.buffer)
+      .jpeg({ quality: 90 })
+      .toBuffer();
 
-    if (!fs.existsSync(uploadDir)) {
-      fs.mkdirSync(uploadDir, { recursive: true });
-    }
+    // 🔹 Cloudinary'ye yükle
+    const uploadResult = await new Promise((resolve, reject) => {
+      const stream = cloudinary.uploader.upload_stream(
+        { folder: "uploads/images" },
+        (error, result) => {
+          if (error) reject(error);
+          else resolve(result);
+        }
+      );
+      stream.end(processedBuffer);
+    });
 
-    const filePath = path.join(uploadDir, fileName);
+    const metadata = await sharp(processedBuffer).metadata();
 
-    // 🔹 Sharp ile metadata oku (gerçek çözünürlük)
-    const metadata = await sharp(imageFile.buffer).metadata();
-
-    // 🔹 Görseli orijinal çözünürlükte kaydet
-    await sharp(imageFile.buffer)
-      .jpeg({ quality: 90 }) // her zaman .jpeg olarak kaydedilir
-      .toFile(filePath);
-
-    const fileUrl = `/uploads/images/${fileName}`;
-
-    // 🔹 Genişlik / yükseklik bilgilerini döndür
+    // 🔹 Aynı response formatı
     res.status(200).json({
       success: true,
       data: {
-        fileName,
-        fileUrl,
+        fileName: path.basename(uploadResult.public_id),
+        fileUrl: uploadResult.secure_url,
         mimeType: imageFile.mimetype,
         fileSize: imageFile.size,
         position: position ? Number(position) : null,
@@ -267,7 +353,7 @@ const uploadImage = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error("Resim yükleme hatası:", error);
+    console.error("Cloudinary upload hatası:", error);
     res.status(500).json({
       success: false,
       message: "Resim yüklenirken bir hata meydana geldi.",
