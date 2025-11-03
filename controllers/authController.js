@@ -1,5 +1,9 @@
 const User = require("../models/User");
 const { generateToken } = require("../utils/jwt");
+const Note = require("../models/Note");
+const Bookmark = require("../models/Bookmark");
+const fs = require("fs");
+const path = require("path");
 const {
   successResponse,
   errorResponse,
@@ -118,9 +122,49 @@ const updateProfile = async (req, res) => {
   }
 };
 
+// Kullanıcı hesabını ve ona ait notları sil
+const deleteAccount = async (req, res) => {
+  try {
+    const userId = req.user._id;
+
+    // Kullanıcının notlarındaki görselleri dosya sisteminden kaldır
+    const userNotes = await Note.find({ userId });
+    userNotes.forEach((note) => {
+      if (note.images && note.images.length > 0) {
+        note.images.forEach((image) => {
+          const filePath = path.join(
+            process.cwd(),
+            "uploads",
+            "images",
+            image.fileName
+          );
+          if (fs.existsSync(filePath)) {
+            try {
+              fs.unlinkSync(filePath);
+            } catch (_) {}
+          }
+        });
+      }
+    });
+
+    // Notları ve ilgili bookmark'ları sil
+    await Note.deleteMany({ userId });
+    await Bookmark.deleteMany({ userId });
+
+    // Kullanıcıyı sil
+    await User.findByIdAndDelete(userId);
+
+    return successResponse(res, "Hesap ve notlar başarıyla silindi", null, 200);
+  } catch (error) {
+    console.error("Delete account error:", error);
+    return serverErrorResponse(res, "Hesap silinirken bir hata oluştu");
+  }
+};
+
 module.exports = {
   register,
   login,
   getProfile,
   updateProfile,
+  deleteAccount,
 };

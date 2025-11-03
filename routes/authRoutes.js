@@ -5,6 +5,7 @@ const {
   login,
   getProfile,
   updateProfile,
+  deleteAccount,
 } = require("../controllers/authController");
 const {
   validateRegister,
@@ -17,5 +18,8 @@ router.post("/login", validateLogin, login);
 
 router.get("/profile", authenticateToken, getProfile);
 router.put("/profile", authenticateToken, updateProfile);
+
+// Basit hesap silme: kullanıcı ve notları siler
+router.delete("/account", authenticateToken, deleteAccount);
 
 module.exports = router;
